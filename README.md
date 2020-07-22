@@ -3,7 +3,7 @@
 This repository contains the code release for:
 
 **Towards Nonlinear Disentanglement in Natural Data with Temporal Sparse Coding.**  
-David Klindt*, Lukas Schott*, Yash Sharma*, Ivan Ustyuzhaninov, Wieland Brendel, Matthias Bethge, Dylan Paiton
+David Klindt*, Lukas Schott*, Yash Sharma*, Ivan Ustyuzhaninov, Wieland Brendel, Matthias Bethge&dagger;, Dylan Paiton&dagger;
 https://arxiv.org/abs/2007.10930
 
 ![Sample traversal](https://github.com/ysharma1126/video_release/blob/master/latent_factors.gif?raw=true)
