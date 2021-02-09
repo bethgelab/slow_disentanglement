@@ -92,13 +92,13 @@ if __name__ == "__main__":
 	parser.add_argument('--seed', default=2, type=int, help='random seed')
 	parser.add_argument('--beta', default=1, type=float,
 						help='weight for kl to normal')
-	parser.add_argument('--gamma', default=1, type=float,
+	parser.add_argument('--gamma', default=10, type=float,
 						help='weight for kl to laplace')
-	parser.add_argument('--rate-prior', default=1, type=float,
+	parser.add_argument('--rate-prior', default=6, type=float,
 						help='rate (or inverse scale) for prior laplace (larger -> sparser).')
 	parser.add_argument('--data-distribution', default='laplace', type=str,
 						help='(laplace, uniform)')
-	parser.add_argument('--rate-data', default=-1, type=float,
+	parser.add_argument('--rate-data', default=1, type=float,
 						help='rate (or inverse scale) for data laplace (larger -> sparser). (-1 = rand).')
 	parser.add_argument('--data-k', default=-1, type=int,
 						help='k for data uniform (-1 = rand).')
