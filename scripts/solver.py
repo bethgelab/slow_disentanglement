@@ -303,7 +303,7 @@ class Solver(object):
 
         # do latent walk along axis
         interpolation = torch.linspace(lowest_prob, 1 - lowest_prob, steps=n_steps)
-
+        interpolation = interpolation.to(self.device)
         # fit gaussian to estimate step sizes in latent walk
         n_total = 0
         out, labels = [], []
@@ -344,7 +344,7 @@ class Solver(object):
 
         # plot latent embeddings
         if self.dataset != 'natural':
-            plot_latents(zs, labels, output_dir)
+            plot_latents(zs, labels, output_dir, z_dim=self.z_dim)
 
         self.net_mode(train=True)
 
@@ -358,16 +358,16 @@ class Solver(object):
             self.net.eval()
 
 
-def plot_latents(zs, labels, out_dir, show=False):
-    mus = zs.detach().cpu().numpy()[:, :10]
-    logvars = zs.detach().cpu().numpy()[:, 10:]
+def plot_latents(zs, labels, out_dir, show=False, z_dim=10):
+    mus = zs.detach().cpu().numpy()[:, :z_dim]
+    logvars = zs.detach().cpu().numpy()[:, z_dim:]
     labels = labels.detach().cpu().numpy()
     num_factors = labels.shape[1]
 
     sorting = np.argsort(np.var(mus, 0))[::-1]
 
     plt.figure(figsize=(4 * num_factors, 16))
-    for i in range(5):
+    for i in range(z_dim // 2):
         ind_x = sorting[0+i*2]
         ind_y = sorting[1+i*2]
         for j in range(num_factors):
