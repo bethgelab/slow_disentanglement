@@ -73,6 +73,8 @@ class TupleLoader(Dataset):
 		for factor in factors:
 			sample_ind = self.index_manager.features_to_index(factor)
 			sample = self.data[sample_ind]
+			if self.transform:
+				sample = self.transform(sample)
 			if len(sample.shape) == 2:  # set channel dim to 1
 				sample = sample[None]
 			if np.issubdtype(sample.dtype, np.uint8):
