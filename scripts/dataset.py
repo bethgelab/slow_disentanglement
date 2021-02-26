@@ -328,11 +328,13 @@ class SmallNORB(TupleLoader):
 	def __init__(self, path='./data/smallNORB/', download=True,
 				 mode="all",
 				 transform=None,
+		     		 evaluate=False,
 				 **tupel_loader_kwargs):
 		super().__init__(**tupel_loader_kwargs)
 
 		self.root = os.path.expanduser(path)
 		self.mode = mode
+		self.evaluate = evaluate
 		self.factor_sizes = [5, 10, 9, 18, 6]
 		self.num_factors = len(self.factor_sizes)
 		self.categorical = np.array([True, True, False, False, False])
@@ -374,6 +376,13 @@ class SmallNORB(TupleLoader):
 
 		self.infos = infos[sorted_inds]
 		self.data = data[sorted_inds].numpy()  # is uint8
+		
+	def sample(self, num, random_state):
+		# override super to ignore instance (see https://github.com/google-research/disentanglement_lib/blob/86a644d4ed35c771560dc3360756363d35477357/disentanglement_lib/data/ground_truth/norb.py#L52)
+		factors, observations = super().sample(num, random_state)
+		if self.evaluate:
+			factors = np.concatenate([factors[:, :1], factors[:, 2:]], 1)
+		return factors, observations
 
 	def __len__(self):
 		return len(self.data)
@@ -1001,7 +1010,8 @@ def return_data(args):
 		train_data = SmallNORB(
 			prior=args.data_distribution,
 			rate=args.rate_data,
-			k=args.data_k)
+			k=args.data_k,
+			evaluate=args.evaluate)
 
 	elif name.lower() == 'shapes3d':
 		train_data = Shapes3D(
