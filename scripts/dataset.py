@@ -336,7 +336,8 @@ class SmallNORB(TupleLoader):
 		self.mode = mode
 		self.evaluate = evaluate
 		self.factor_sizes = [5, 10, 9, 18, 6]
-		self.num_factors = len(self.factor_sizes)
+		self.latent_factor_indices = [0, 2, 3, 4]
+		self.num_factors = len(self.latent_factor_indices)
 		self.categorical = np.array([True, True, False, False, False])
 		self.index_manager = IndexManger(self.factor_sizes)
 
@@ -379,7 +380,7 @@ class SmallNORB(TupleLoader):
 	
 	def sample_factors(self, num, random_state):
 		# override super to ignore instance (see https://github.com/google-research/disentanglement_lib/blob/86a644d4ed35c771560dc3360756363d35477357/disentanglement_lib/data/ground_truth/norb.py#L52)
-		factors = super().sample_factors(self, num, random_state)
+		factors = super().sample_factors(num, random_state)
 		if self.evaluate:
 			factors = np.concatenate([factors[:, :1], factors[:, 2:]], 1)
 		return factors
@@ -388,9 +389,8 @@ class SmallNORB(TupleLoader):
 		# override super to ignore instance (see https://github.com/google-research/disentanglement_lib/blob/86a644d4ed35c771560dc3360756363d35477357/disentanglement_lib/data/ground_truth/norb.py#L52)
 		if self.evaluate:
 			instances = random_state.randint(0, self.factor_sizes[1], factors[:, :1].shape)
-			factors = np.concatenate([factors[:, :1], instances, factors[:, 2:]], 1)
-		observations = super().sample_observations_from_factors(self, factors, random_state)
-		return factors, observations
+			factors = np.concatenate([factors[:, :1], instances, factors[:, 1:]], 1)
+		return super().sample_observations_from_factors(factors, random_state)
 
 	def __len__(self):
 		return len(self.data)
