@@ -25,7 +25,7 @@ If you make use of this code in your own work, please cite our paper:
 
 ### Datasets
 Our work also contributes two new datasets. <br/>
-The Natural Sprites dataset can be doanloaded here: https://zenodo.org/record/3948069#.YGGc82QzZro <br/>
+The Natural Sprites dataset can be downloaded here: https://zenodo.org/record/3948069#.YGGc82QzZro <br/>
 The KITTI Masks dataset can be downloaded here: https://zenodo.org/record/3931823#.YGGdMWQzZro
 
 
