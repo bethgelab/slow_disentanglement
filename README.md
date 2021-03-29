@@ -15,18 +15,19 @@ An example latent traversal using our learned model: <br/>
 ### Cite
 If you make use of this code in your own work, please cite our paper:
 ```
-@article{klindt2020towards,
-  title={Towards Nonlinear Disentanglement in Natural Data with Temporal Sparse Coding}, 
-  author={Klindt, David and Schott, Lukas and Sharma, Yash and Ustyuzhaninov, Ivan and Brendel, Wieland and Bethge, Matthias and Paiton, Dylan}, 
-  journal={arXiv preprint arXiv:2007.10930}, 
-  year={2020} 
+@inproceedings{klindt2021towards,
+title={Towards Nonlinear Disentanglement in Natural Data with Temporal Sparse Coding},
+author={David A. Klindt and Lukas Schott and Yash Sharma and Ivan Ustyuzhaninov and Wieland Brendel and Matthias Bethge and Dylan Paiton},
+booktitle={International Conference on Learning Representations},
+year={2021},
+url={https://openreview.net/forum?id=EbIDjBynYJ8}
 }
 ```
 
 ### Datasets
 Our work also contributes two new datasets. <br/>
-The Natural Sprites dataset can be downloaded here: https://zenodo.org/record/3948069#.YGGc82QzZro <br/>
-The KITTI Masks dataset can be downloaded here: https://zenodo.org/record/3931823#.YGGdMWQzZro
+The Natural Sprites dataset can be downloaded here: https://zenodo.org/record/3948069 <br/>
+The KITTI Masks dataset can be downloaded here: https://zenodo.org/record/3931823
 
 
 ### Acknowledgements
