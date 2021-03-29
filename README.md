@@ -6,6 +6,7 @@ This repository contains the code release for:
 David Klindt*, Lukas Schott*, Yash Sharma*, Ivan Ustyuzhaninov, Wieland Brendel, Matthias Bethge&dagger;, Dylan Paiton&dagger;
 https://arxiv.org/abs/2007.10930
 
+An example latent traversal using our learned model:
 ![Sample traversal](https://github.com/bethgelab/slow_disentanglement/blob/master/latent_factors.gif?raw=true)
 
 
@@ -21,6 +22,12 @@ If you make use of this code in your own work, please cite our paper:
   year={2020} 
 }
 ```
+
+### Datasets
+Our work also contributes two new datasets.
+The Natural Sprites dataset can be doanloaded here: https://zenodo.org/record/3948069#.YGGc82QzZro
+The KITTI Masks dataset can be downloaded here: https://zenodo.org/record/3931823#.YGGdMWQzZro
+
 
 ### Acknowledgements
 
