@@ -6,7 +6,7 @@ This repository contains the code release for:
 David Klindt*, Lukas Schott*, Yash Sharma*, Ivan Ustyuzhaninov, Wieland Brendel, Matthias Bethge&dagger;, Dylan Paiton&dagger;
 https://arxiv.org/abs/2007.10930
 
-An example latent traversal using our learned model:
+An example latent traversal using our learned model: <br/>
 ![Sample traversal](https://github.com/bethgelab/slow_disentanglement/blob/master/latent_factors.gif?raw=true)
 
 
