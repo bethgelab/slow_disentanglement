@@ -14,36 +14,36 @@ import random
 name_list = 'person giant_panda lizard parrot skateboard sedan ape dog snake monkey hand rabbit duck cat cow fish train horse turtle bear motorbike giraffe leopard fox deer owl surfboard airplane truck zebra tiger elephant snowboard boat shark mouse frog eagle earless_seal tennis_racket'.split(' ')
 
 def load_csv(csv_file, sequence=2):
-	csv_reader = csv.reader(csv_file, delimiter=',')
-	next(csv_reader)
-	data = defaultdict(list)
-	for i,row in enumerate(csv_reader):
-		for j in range(2,len(row)):
-			considered_columns = row[j:j+sequence]
-			if all(considered_columns):
-				temp = defaultdict(list)
-				for column in considered_columns:
-					val_list = ast.literal_eval(column)
-					for i,val in enumerate(val_list):
-						if val:
-							temp['pos'].append(i)
-							temp['y'].append(val[0])
-							temp['x'].append(val[1])
-							temp['area'].append(val[2])
-				for i in range(len(val_list)):
-					if temp['pos'].count(i) == sequence:
-						data['id'].append(int(row[0]))
-						data['category_id'].append(int(row[1]))
-						data['area'].append([temp['area'][j] for j in range(len(temp['pos'])) if temp['pos'][j]==i])
-						data['x'].append([temp['x'][j] for j in range(len(temp['pos'])) if temp['pos'][j]==i])
-						data['y'].append([temp['y'][j] for j in range(len(temp['pos'])) if temp['pos'][j]==i])
-						for k in range(1,sequence):
-							data['area_diff{}'.format(k if k>1 else '')].append(data['area'][-1][k] - data['area'][-1][k-1])
-							data['x_diff{}'.format(k if k>1 else '')].append(data['x'][-1][k] - data['x'][-1][k-1])
-							data['y_diff{}'.format(k if k>1 else '')].append(data['y'][-1][k] - data['y'][-1][k-1])
-					else:
-						assert temp['pos'].count(i) < sequence
-	return data
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    next(csv_reader)
+    data = defaultdict(list)
+    for i,row in enumerate(csv_reader):
+        for j in range(2,len(row)):
+            considered_columns = row[j:j+sequence]
+            if all(considered_columns):
+                temp = defaultdict(list)
+                for column in considered_columns:
+                    val_list = ast.literal_eval(column)
+                    for i,val in enumerate(val_list):
+                        if val:
+                            temp['pos'].append(i)
+                            temp['y'].append(val[0])
+                            temp['x'].append(val[1])
+                            temp['area'].append(val[2])
+                for i in range(len(val_list)):
+                    if temp['pos'].count(i) == sequence:
+                        data['id'].append(int(row[0]))
+                        data['category_id'].append(int(row[1]))
+                        data['area'].append([temp['area'][j] for j in range(len(temp['pos'])) if temp['pos'][j]==i])
+                        data['x'].append([temp['x'][j] for j in range(len(temp['pos'])) if temp['pos'][j]==i])
+                        data['y'].append([temp['y'][j] for j in range(len(temp['pos'])) if temp['pos'][j]==i])
+                        for k in range(1,sequence):
+                            data['area_diff{}'.format(k if k>1 else '')].append(data['area'][-1][k] - data['area'][-1][k-1])
+                            data['x_diff{}'.format(k if k>1 else '')].append(data['x'][-1][k] - data['x'][-1][k-1])
+                            data['y_diff{}'.format(k if k>1 else '')].append(data['y'][-1][k] - data['y'][-1][k-1])
+                    else:
+                        assert temp['pos'].count(i) < sequence
+    return data
 
 def load_data(path):
     with open(path + '.pkl', 'rb') as data:

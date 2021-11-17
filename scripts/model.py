@@ -13,6 +13,11 @@ def reparametrize(mu, logvar):
     eps = Variable(std.data.new(std.size()).normal_())
     return mu + std*eps
 
+def compute_kl(z_1, z_2, logvar_1, logvar_2):
+    var_1 = logvar_1.exp()
+    var_2 = logvar_2.exp()
+    return var_1/var_2 + ((z_2-z_1)**2)/var_2 - 1 + logvar_2 - logvar_1
+
 
 class View(nn.Module):
     def __init__(self, size):
@@ -26,8 +31,11 @@ class View(nn.Module):
 class BetaVAE_H(nn.Module):
     """Model proposed in original beta-VAE paper(Higgins et al, ICLR, 2017)."""
 
-    def __init__(self, z_dim=10, nc=3):
+    def __init__(self, z_dim=10, nc=3, pcl=False, gvae=False, mlvae=False):
         super(BetaVAE_H, self).__init__()
+        self.gvae = gvae
+        self.mlvae = mlvae
+        self.pcl = pcl
         self.z_dim = z_dim
         self.nc = nc
         self.encoder = nn.Sequential(
@@ -42,7 +50,7 @@ class BetaVAE_H(nn.Module):
             nn.Conv2d(64, 256, 4, 1),            # B, 256,  1,  1
             nn.ReLU(True),
             View((-1, 256*1*1)),                 # B, 256
-            nn.Linear(256, z_dim*2),             # B, z_dim*2
+            nn.Linear(256, z_dim if pcl else z_dim*2),             # B, z_dim*2
         )
         self.decoder = nn.Sequential(
             nn.Linear(z_dim, 256),               # B, 256
@@ -68,15 +76,41 @@ class BetaVAE_H(nn.Module):
 
     def forward(self, x, return_z=False):
         distributions = self._encode(x)
-        mu = distributions[:, :self.z_dim]
-        logvar = distributions[:, self.z_dim:]
-        z = reparametrize(mu, logvar)
-        x_recon = self._decode(z)
-
-        if return_z:
-            return x_recon, mu, logvar, z
+        if self.pcl:
+            return None, distributions, None
         else:
-            return x_recon, mu, logvar
+            mu = distributions[:, :self.z_dim]
+            logvar = distributions[:, self.z_dim:]
+            if self.gvae or self.mlvae:
+                mu1, mu2, logvar1, logvar2 = mu[::2].clone(), mu[1::2].clone(), logvar[::2].clone(), logvar[1::2].clone()
+                kl_per_point = compute_kl(mu1, mu2, logvar1, logvar2)
+                if self.gvae:
+                    new_mu = 0.5 * mu1 + 0.5 * mu2
+                    new_logvar = (0.5 * logvar1.exp() + 0.5 * logvar2.exp()).log()
+                else:
+                    var_1 = logvar1.exp()
+                    var_2 = logvar2.exp()
+                    new_var = 2*var_1 * var_2 / (var_1 + var_2)
+                    new_mu = (mu1/var_1 + mu2/var_2)*new_var*0.5
+                    new_logvar = new_var.log()
+                histogram = []
+                for x in kl_per_point:
+                    x_normal = (x - x.min()) / (x.max() - x.min())
+                    indices = torch.floor(2 * x_normal)
+                    histogram.append(torch.clamp(indices, 0, 1).int())
+                histogram = torch.stack(histogram)
+                mask = torch.eq(histogram, torch.ones_like(histogram))
+                mu[::2] = torch.where(mask, mu1, new_mu)
+                logvar[::2] = torch.where(mask, logvar1, new_logvar)
+                mu[1::2] = torch.where(mask, mu2, new_mu)
+                logvar[1::2] = torch.where(mask, logvar2, new_logvar)
+            z = reparametrize(mu, logvar)
+            x_recon = self._decode(z)
+
+            if return_z:
+                return x_recon, mu, logvar, z
+            else:
+                return x_recon, mu, logvar
 
     def _encode(self, x):
         return self.encoder(x)

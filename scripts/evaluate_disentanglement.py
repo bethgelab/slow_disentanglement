@@ -32,7 +32,7 @@ import mcc_metric.metric as mcc  # pylint: disable=unused-import
 def main(args, dataset):
 	device = torch.device('cuda' if torch.cuda.is_available() and args.cuda else 'cpu')
 	net = BetaVAE
-	net = net(args.z_dim, args.num_channel).to(device)
+	net = net(args.z_dim, args.num_channel, args.pcl).to(device)
 	file_path = os.path.join(args.ckpt_dir, 'last')
 	checkpoint = torch.load(file_path)
 	net.load_state_dict(checkpoint['model_states']['net'])

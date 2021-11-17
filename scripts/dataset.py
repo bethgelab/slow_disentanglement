@@ -1131,4 +1131,3 @@ if __name__ == '__main__':
 	print('Shapes3D... takes 5min')
 	dset = Shapes3D(prior='laplace', rate=1, k=-1)
 	test_data(dset, False)
-

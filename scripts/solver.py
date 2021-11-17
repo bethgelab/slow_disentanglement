@@ -4,6 +4,7 @@ warnings.filterwarnings("ignore")
 import os
 import shutil
 import torch
+import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -48,6 +49,9 @@ def compute_sparsity(mu, normed=True):
 
 class Solver(object):
     def __init__(self, args, data_loader=None):
+        self.gvae = args.gvae
+        self.mlvae = args.mlvae
+        self.pcl = args.pcl
         self.ckpt_dir = args.ckpt_dir
         self.output_dir = args.output_dir
         self.data_loader = data_loader
@@ -63,7 +67,13 @@ class Solver(object):
         self.gamma = args.gamma  # for kl to laplace
         self.rate_prior = args.rate_prior * torch.ones(
             1, requires_grad=False, device=self.device)
-        params = []
+        if self.pcl:
+            self.params = [nn.Parameter(data=torch.ones(1, self.z_dim, requires_grad=True, device=self.device)),
+                           nn.Parameter(data=-torch.ones(1, self.z_dim, requires_grad=True, device=self.device)), 
+                           nn.Parameter(data=torch.zeros(self.z_dim, requires_grad=True, device=self.device)),
+                           nn.Parameter(data=torch.zeros(1, requires_grad=True, device=self.device))]
+        else:
+            self.params = []
 
         # for adam
         self.lr = args.lr
@@ -74,9 +84,9 @@ class Solver(object):
             torch.zeros(self.z_dim, device=self.device),
             torch.ones(self.z_dim, device=self.device))
 
-        self.net = BetaVAE(self.z_dim, self.nc).to(self.device)
+        self.net = BetaVAE(self.z_dim, self.nc, self.pcl, self.gvae, self.mlvae).to(self.device)
         self.optim = optim.Adam(
-            params + list(self.net.parameters()), lr=self.lr,
+            self.params + list(self.net.parameters()), lr=self.lr,
             betas=(self.beta1, self.beta2))
 
         self.ckpt_name = args.ckpt_name
@@ -111,6 +121,11 @@ class Solver(object):
         return [x.sum(1).mean(0, True) for x in [normal_entropy,
                                                  cross_ent_normal,
                                                  cross_ent_laplace]]
+    
+    def r_func(self, h1, h2):
+        Q = torch.sum(torch.abs(self.params[0] * h1 + self.params[1] * h2 + self.params[2]), dim=1)
+        Qbar = torch.sum(h1**2, dim=1)
+        return - Q + Qbar + self.params[3]
 
     def train(self, writer):
         self.net_mode(train=True)
@@ -139,24 +154,41 @@ class Solver(object):
                 x_recon, mu, logvar = self.net(x)
                 # mu shape: Batch x latent_dim
                 mean_vars = torch.var(mu, dim=0)
-                var_means = torch.mean(torch.exp(logvar), dim=0)
-                recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
+                if self.pcl:
+                    xtm1 = mu[::2]
+                    xt = mu[1::2]
+                    xtm1_shuffle = xtm1[torch.randperm(xtm1.shape[0])]
+                    logits = torch.cat([self.r_func(xt, xtm1), self.r_func(xt, xtm1_shuffle)])
+                    labels = torch.cat([torch.ones(xt.shape[0]), torch.zeros(xt.shape[0])]).to(self.device)
+                    vae_loss = F.binary_cross_entropy_with_logits(logits, labels)
+                    recon_loss, normal_entropy, cross_ent_normal, cross_ent_laplace = torch.zeros(1), torch.zeros(1), \
+                                                                                        torch.zeros(1), torch.zeros(1)
+                    var_means = torch.zeros_like(mean_vars)
+                else:
+                    var_means = torch.mean(torch.exp(logvar), dim=0)
+                    recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
 
-                if torch.isnan(recon_loss):
-                    print('cancel because of nan in loss, iter',
-                          self.global_iter)
-                    failure = True
-                    out = True
-                    break
+                    if torch.isnan(recon_loss):
+                        print('cancel because of nan in loss, iter',
+                              self.global_iter)
+                        failure = True
+                        out = True
+                        break
 
-                # train both ways
-                [normal_entropy, cross_ent_normal, cross_ent_laplace
-                 ] = self.compute_cross_ent_combined(mu, logvar)
-                vae_loss = 2 * recon_loss
-                kl_normal = cross_ent_normal - normal_entropy
-                kl_laplace = cross_ent_laplace - normal_entropy
-                vae_loss = vae_loss + self.beta * kl_normal
-                vae_loss = vae_loss + self.gamma * kl_laplace
+                    # train both ways
+                    [normal_entropy, cross_ent_normal, cross_ent_laplace
+                     ] = self.compute_cross_ent_combined(mu, logvar)
+                    if self.mlvae or self.gvae:
+                        vae_loss = recon_loss
+                        cross_ent_normal = torch.mean(0.5 * torch.sum(mu**2 + logvar.exp() - logvar - 1, dim=1))
+                        normal_entropy = torch.zeros_like(cross_ent_normal)
+                        self.gamma = 0.
+                    else:
+                        vae_loss = 2 * recon_loss
+                    kl_normal = cross_ent_normal - normal_entropy
+                    kl_laplace = cross_ent_laplace - normal_entropy
+                    vae_loss = vae_loss + self.beta * kl_normal
+                    vae_loss = vae_loss + self.gamma * kl_laplace
 
                 # logging
                 running_loss[0] += recon_loss.item()
@@ -226,7 +258,8 @@ class Solver(object):
 
         # in the end traverse anyway
         try:
-            self.traverse()
+            if not self.pcl:
+                self.traverse()
         except RuntimeError:
             print('skip the traversal because of CUDA OOM.')
 

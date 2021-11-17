@@ -82,6 +82,9 @@ def loguniform(low, high):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='slowVAE')
+	parser.add_argument('--mlvae', action='store_true')
+	parser.add_argument('--gvae', action='store_true')
+	parser.add_argument('--pcl', action='store_true')
 	parser.add_argument('--experiment-dir', type=str, default='', help='specify path')
 	parser.add_argument('--evaluate', action='store_true', default=False, help='evaluate instead of train')
 	parser.add_argument('--specify', default='', type=str, help='use argument to only compute a subset of metrics')
